@@ -1,0 +1,33 @@
+name: release
+
+on:
+  workflow_dispatch:
+    inputs:
+      sha1:
+        description: 'The sha1 were to build from'
+        required: true
+        type: string
+      version:
+        description: 'The version to release'
+        required: true
+        type: string
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 #v4.1.7
+        with:
+          fetch-depth: 0
+
+      - run: |
+          git clone --depth=1 https://chromium.googlesource.com/chromium/tools/depot_tools.git
+          export PATH="$(pwd)/depot_tools:$PATH"
+          mkdir r8
+          cd r8
+          git init
+          git remote add origin https://r8.googlesource.com/r8
+          git fetch --depth 1 origin ${{ github.event.inputs.sha1 }}
+          git checkout FETCH_HEAD
+          cd r8
+          ../r8_release.main.kts --version ${{ github.event.inputs.version }}
